@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "kMywaP1kM051nKA/lAhMzxLHarY1iXF9sfzsG7sVXks=",
+  "Source": "efcoremongodb",
+  "BasePath": "_content/efcoremongodb",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
