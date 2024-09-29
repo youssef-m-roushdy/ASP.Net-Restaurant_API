@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using efcoremongodb.Dtos.DetailsDto.ProductDetailsDto;
 using efcoremongodb.Dtos.ProductDto;
 using efcoremongodb.Interfaces;
 using efcoremongodb.Mappers;
@@ -22,13 +23,16 @@ namespace efcoremongodb.Repository
             _context = context;
             _userManager = userManager;
         }
-        public async Task<Product> AddProduct(CreateProductDto productDto)
+        public async Task<ProductDetailsDto> AddProduct(CreateProductDto productDto)
         {
             var product = productDto.ToProductFromCreateDto();
 
             await _context.Products.InsertOneAsync(product);
+            var productDetail = await MapProductDetails(product);
+            if(productDetail == null)
+                return null;
 
-            return product;
+            return productDetail;
         }
 
         public async Task<Product?> DeleteProduct(string id)
@@ -73,7 +77,7 @@ namespace efcoremongodb.Repository
                     user.CommentIds.Remove(comment.Id);
                     await _userManager.UpdateAsync(user);  // Save updated user
                 }
-                
+
             }
 
             // Finally, delete the product from Products collection
@@ -83,7 +87,7 @@ namespace efcoremongodb.Repository
         }
 
 
-        public async Task<Product?> EditProduct(string id, UpdateProductDto product)
+        public async Task<ProductDetailsDto?> EditProduct(string id, UpdateProductDto product)
         {
             var productToUpdate = await _context.Products.Find(r => r.Id == id).FirstOrDefaultAsync();
             if (productToUpdate == null)
@@ -96,17 +100,82 @@ namespace efcoremongodb.Repository
             productToUpdate.Image = product.Image;
 
             await _context.Products.ReplaceOneAsync(r => r.Id == id, productToUpdate);
-            return productToUpdate;
+            var productDetail = await MapProductDetails(productToUpdate);
+            return productDetail;
         }
 
-        public async Task<IEnumerable<Product>> GetAllProducts()
+        public async Task<IEnumerable<ProductDetailsDto>> GetAllProducts()
         {
-            return await _context.Products.Find(_ => true).ToListAsync();
+            var products = await _context.Products.Find(_ => true).ToListAsync();
+            var productsDetails = new List<ProductDetailsDto>();
+            foreach (var product in products)
+            {
+                var productDetail = await MapProductDetails(product);
+                if(productDetail != null)
+                {
+                    productsDetails.Add(productDetail);
+                }
+            }
+            return productsDetails;
         }
 
-        public async Task<Product?> GetProductById(string id)
+        public async Task<ProductDetailsDto?> GetProductById(string id)
         {
-            return await _context.Products.Find(r => r.Id == id).FirstOrDefaultAsync();
+            var product = await _context.Products.Find(r => r.Id == id).FirstOrDefaultAsync();
+            if(product == null)
+            {
+                throw new Exception("Invalid product id");
+            }
+            var productDetail = await MapProductDetails(product);
+            return productDetail;
         }
+
+        public async Task<ProductDetailsDto?> MapProductDetails(Product product)
+        {
+            if (product == null)
+                throw new Exception("Product not found");
+
+            var comments = new List<CommentOnProductDto>();
+            var branchProducts = new List<ProductInBranchProductDto>();
+            foreach (var commentId in product.CommentIds)
+            {
+                var comment = await _context.Comments.Find(x => x.Id == commentId).FirstOrDefaultAsync();
+                if (comment != null)
+                {
+                    var user = await _userManager.FindByIdAsync(comment.UserId.ToString());
+                    if (user != null)
+                    {
+                        comments.Add(new CommentOnProductDto
+                        {
+                            Id = comment.Id,
+                            User = user.FullName,
+                            Content = comment.Content,
+                            Rating = comment.Rating,
+                            DatePosted = comment.DatePosted
+                        });
+                    }
+                }
+
+            }
+            foreach (var BranchProductId in product.BranchProductIds)
+            {
+                var branchProduct = await _context.BranchProducts.Find(x => x.Id == BranchProductId).FirstOrDefaultAsync();
+                if (branchProduct != null)
+                {
+                    var branch = await _context.Branches.Find(x => x.Id == branchProduct.BranchId).FirstOrDefaultAsync();
+                    if (branch != null)
+                    {
+                        branchProducts.Add(new ProductInBranchProductDto
+                        {
+                            Id = branchProduct.Id,
+                            Branch = branch.Name,
+                            Quantity = branchProduct.Quantity
+                        });
+                    }
+                }
+            }
+            return product.GetProductInfo(comments, branchProducts);
+        }
+
     }
 }

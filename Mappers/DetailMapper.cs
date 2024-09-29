@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using efcoremongodb.Dtos.DetailsDto.BranchDetailsDto;
 using efcoremongodb.Dtos.DetailsDto.BranchProductDetailsDto;
 using efcoremongodb.Dtos.DetailsDto.CommentDetailsDto;
 using efcoremongodb.Dtos.DetailsDto.OrderDetailsDto;
+using efcoremongodb.Dtos.DetailsDto.ProductDetailsDto;
 using efcoremongodb.Dtos.DetailsDto.UserDetailsDto;
 using efcoremongodb.Models;
 
@@ -93,6 +95,34 @@ namespace efcoremongodb.Mappers
                 PhoneNumber = user.PhoneNumber,
                 Comments = comments,
                 Orders = orders
+            };
+        }
+
+        public static ProductDetailsDto GetProductInfo(this Product product, List<CommentOnProductDto> comments, List<ProductInBranchProductDto> branchProducts)
+        {
+            return new ProductDetailsDto
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                Description = product.Description,
+                Image = product.Image,
+                Comments = comments,
+                BranchProducts = branchProducts
+            };
+        }
+
+        public static BranchDetailsDto GetBranchInfo(this Branch branch, List<OrdersInBranchDto> orders, List<BranchInfoProductDto> branchProducts)
+        {
+            return new BranchDetailsDto
+            {
+                Id = branch.Id,
+                Name = branch.Name,
+                Address = branch.Address,
+                ContactNumber = branch.ContactNumber,
+                OpeningHours = branch.OpeningHours,
+                Orders = orders,
+                BranchProducts = branchProducts
             };
         }
     }

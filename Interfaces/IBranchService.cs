@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using efcoremongodb.Dtos.BranchDto;
+using efcoremongodb.Dtos.DetailsDto.BranchDetailsDto;
 using efcoremongodb.Models;
 
 namespace efcoremongodb.Interfaces
 {
     public interface IBranchService
     {
-        Task<IEnumerable<Branch>> GetAllBranchs();
+        Task<IEnumerable<BranchDetailsDto>> GetAllBranchs();
 
-        Task<Branch?> GetBranchById (string id);
+        Task<BranchDetailsDto?> GetBranchById (string id);
     
-        Task<Branch?> AddBranch(CreateBranchDto newBranch);
-        Task<Branch?> EditBranch(string id, UpdateBranchDto Branch);
+        Task<BranchDetailsDto?> AddBranch(CreateBranchDto newBranch);
+        Task<BranchDetailsDto?> EditBranch(string id, UpdateBranchDto Branch);
         Task<Branch?> DeleteBranch(string id);
     }
 }
